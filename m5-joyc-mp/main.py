@@ -1,6 +1,5 @@
 from m5stack import *
 from m5ui import *
-from uiflow import *
 import espnow
 import wifiCfg
 import hat
@@ -14,7 +13,6 @@ setScreenColor(0x000000)
 axp.setLDO2Volt(2.8)
 hat_joyc0 = hat.get(hat.JOYC)
 
-
 label0 = M5TextBox(22, 48, "Text", lcd.FONT_Default, 0xFFFFFF, rotate=0)
 label1 = M5TextBox(22, 62, "Text", lcd.FONT_Default, 0xFFFFFF, rotate=0)
 label2 = M5TextBox(22, 76, "Text", lcd.FONT_Default, 0xFFFFFF, rotate=0)
@@ -24,10 +22,11 @@ titlebar = M5Title(title="text", x=3, fgcolor=0xFFFFFF, bgcolor=0x5b5b5b)
 
 def main():
   hat_joyc0.SetLedColor(0x3232ff)
-
+  
   wifiCfg.wlan_ap.active(True)
   wifiCfg.wlan_sta.active(True)
   espnow.init()
+  espnow.recv_cb(receive_msg)
 
   timerSch.run('UpdatePosition', 10, 0x00)
   timerSch.run('UpdateBattery', 1000, 0x00) 
@@ -68,6 +67,6 @@ def receive_msg(_):
   else:
     pass
 
-espnow.recv_cb(receive_msg)
+
 
 main()
