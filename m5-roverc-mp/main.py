@@ -5,8 +5,12 @@ import espnow
 import wifiCfg
 import hat
 
+
 axp.setLDO2Volt(2.8)
 setScreenColor(0x000000)
+
+hat_roverc0 = hat.get(hat.ROVERC)
+
 label0 = M5TextBox(1, 48, "Status", lcd.FONT_Default, 0xFFFFFF, rotate=0)
 label1 = M5TextBox(1, 62, "Controls", lcd.FONT_Default, 0xFFFFFF, rotate=0)
 
@@ -46,7 +50,6 @@ def tSendDiscoveryBroadcast():
   global paired
   if paired == False:
     espnow.broadcast(data=str(espnow.get_mac_addr()))
-    print('pairing...')
     pass
   else:
     timerSch.stop('SendDiscoveryBroadcast')
@@ -54,7 +57,7 @@ def tSendDiscoveryBroadcast():
 
 def receive_msg(_):
   global addr, data, paired
-  addr, _, data = espnow.recv_data(encoder='str')
+  addr, _, data = espnow.recv_data(encoder='byte')
 
   if paired == False:
     paired = True
@@ -63,7 +66,27 @@ def receive_msg(_):
     pass
   else:
     #TODO: control actual motors to move Rover
-    label1.setText(str(data));
+    set_speed(data[0], data[1], data[2])
+
     pass
 
-main();  
+def set_speed(Vtx, Vty, Wt):
+  Wt = 100 if ( Wt > 100 )  else  Wt
+  Wt = -100 if ( Wt < -100 ) else Wt
+
+  Vtx = 100 if ( Vtx > 100 )  else  Vtx
+  Vtx = -100 if ( Vtx < -100 ) else Vtx
+  Vty = 100 if ( Vty > 100 )  else  Vty
+  Vty = -100 if ( Vty < -100 ) else Vty
+
+  Vtx = (Vtx *  (100- abs(Wt)) / 100) if ( Wt != 0 ) else Vtx
+  Vty = (Vty *  (100- abs(Wt)) / 100) if ( Wt != 0 ) else Vty
+
+  Vtx = Vtx - 100
+  Vty = Vty - 100
+  Wt = Wt -100 
+
+  print("x:"+str(Vtx)+"y:"+str(Vty)+"z:"+str(Wt))
+  hat_roverc0.SetSpeed(Vtx, Vty, Wt)
+
+main()
